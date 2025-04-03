@@ -1,11 +1,39 @@
 package responses
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
 // ResponseHelper provides methods for standardized API responses
 type ResponseHelper struct{}
+
+// PaginatedResponse sends a successful paginated response
+func (r *ResponseHelper) PaginatedResponse(c *gin.Context, data interface{}, message string) {
+	// Check if data is a map with pagination info
+	paginatedData, ok := data.(map[string]interface{})
+	if !ok {
+		// If not, fall back to regular response
+		r.OkResponse(c, data, message)
+		return
+	}
+
+	// Create response with pagination metadata
+	response := gin.H{
+		"success": true,
+		"message": message,
+		"data":    paginatedData["data"],
+		"meta": gin.H{
+			"total":        paginatedData["total"],
+			"per_page":     paginatedData["per_page"],
+			"current_page": paginatedData["current_page"],
+			"last_page":    paginatedData["last_page"],
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
+}
 
 // NewResponseHelper creates a new ResponseHelper
 func NewResponseHelper() *ResponseHelper {

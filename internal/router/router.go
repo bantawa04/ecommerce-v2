@@ -16,6 +16,7 @@ type Router interface {
 }
 
 // NewRouter creates and configures a Gin router
+// Update the NewRouter function to include brand routes
 func NewRouter(
 	respHelper *responses.ResponseHelper,
 	healthHandler *handlers.HealthHandler,
@@ -23,10 +24,8 @@ func NewRouter(
 ) *gin.Engine {
 	router := gin.Default()
 
-	// Add case converter middleware
+	// Add middleware
 	router.Use(middlewares.CaseConverterMiddleware())
-	
-	// Add error handler middleware
 	router.Use(middlewares.ErrorHandler(respHelper))
 
 	// Add custom logger middleware
@@ -52,7 +51,19 @@ func NewRouter(
 	router.GET("/ping", healthHandler.HealthCheck)
 
 	// Brand routes
-	router.GET("/api/brands", brandHandler.GetAllBrands)
+	api := router.Group("/api")
+	{
+		brands := api.Group("/brands")
+		{
+			brands.GET("", brandHandler.GetAllBrands)
+			brands.GET("/:id", brandHandler.GetBrand)
+			brands.POST("", brandHandler.CreateBrand)
+			brands.PUT("/:id", brandHandler.UpdateBrand)
+			brands.DELETE("/:id", brandHandler.DeleteBrand)
+			brands.GET("/active", brandHandler.GetActiveBrands)
+			brands.GET("/grouped", brandHandler.GetGroupedBrands)
+		}
+	}
 
 	return router
 }
