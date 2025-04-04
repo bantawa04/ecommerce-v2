@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"beautyessentials.com/internal/api/responses"
+	"beautyessentials.com/internal/requests"
 	"beautyessentials.com/internal/service/interfaces"
 	"beautyessentials.com/internal/validators"
 	"github.com/gin-gonic/gin"
@@ -107,7 +108,7 @@ func (h *BrandHandler) GetBrand(c *gin.Context) {
 // CreateBrand handles the request to create a new brand
 func (h *BrandHandler) CreateBrand(c *gin.Context) {
 	// Parse and validate request
-	var request validators.BrandCreateRequest
+	var request requests.BrandCreateRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		h.respHelper.SendError(c, "Invalid request format", err.Error(), http.StatusBadRequest)
 		return
@@ -136,7 +137,7 @@ func (h *BrandHandler) UpdateBrand(c *gin.Context) {
 	id := c.Param("id")
 
 	// Parse and validate request
-	var request validators.BrandUpdateRequest
+	var request requests.BrandUpdateRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		h.respHelper.SendError(c, "Invalid request format", err.Error(), http.StatusBadRequest)
 		return
@@ -173,7 +174,8 @@ func (h *BrandHandler) DeleteBrand(c *gin.Context) {
 		return
 	}
 
-	h.respHelper.OkResponse(c, nil, "Brand deleted successfully")
+	// Return the response
+	h.respHelper.SendSuccess(c, "Brand deleted successfully", http.StatusOK)
 }
 
 // GetActiveBrands handles the request to get all active brands

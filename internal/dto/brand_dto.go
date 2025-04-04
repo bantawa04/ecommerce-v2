@@ -27,7 +27,7 @@ func FromModel(brand models.Brand) BrandDTO {
 		Status:    string(brand.Status),
 		CreatedAt: &brand.CreatedAt,
 		UpdatedAt: &brand.UpdatedAt,
-		DeletedAt: brand.DeletedAt,
+		DeletedAt: &brand.DeletedAt,
 	}
 }
 
@@ -50,7 +50,7 @@ func (dto BrandDTO) ToModel() models.Brand {
 			}
 			return time.Now()
 		}(),
-		DeletedAt: dto.DeletedAt,
+		DeletedAt: *dto.DeletedAt,
 	}
 }
 

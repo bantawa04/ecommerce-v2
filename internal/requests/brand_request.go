@@ -1,4 +1,4 @@
-package validators
+package requests
 
 // BrandCreateRequest represents the request structure for brand creation
 type BrandCreateRequest struct {

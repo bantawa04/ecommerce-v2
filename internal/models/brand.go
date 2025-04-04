@@ -24,7 +24,7 @@ type Brand struct {
 	Status    StatusEnum `json:"status" gorm:"type:enum('active','inactive');default:active"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty" gorm:"index"`
+	DeletedAt time.Time  `json:"deleted_at,omitempty" gorm:"index"`
 }
 
 // BeforeCreate will set a ULID rather than numeric ID and generate a slug
