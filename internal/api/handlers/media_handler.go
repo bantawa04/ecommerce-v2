@@ -43,7 +43,7 @@ func (h *MediaHandler) GetAllMedia(c *gin.Context) {
 
 	// Add pagination parameters - default to true (matching Laravel)
 	shouldPaginate := true
-	paginateParam := c.DefaultQuery("paginate", "true")
+	paginateParam := c.DefaultQuery("paginate", "false")
 	if paginateParam == "false" {
 		shouldPaginate = false
 	}
