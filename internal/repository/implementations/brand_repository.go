@@ -3,7 +3,6 @@ package implementations
 import (
 	"context"
 	"strings"
-	"time"
 
 	"beautyessentials.com/internal/models"
 	"beautyessentials.com/internal/repository/interfaces"
@@ -212,11 +211,16 @@ func (r *BrandRepository) DeleteBrand(ctx context.Context, id string) error {
 	}()
 
 	// Use UpdateColumn instead of Update to bypass soft delete callbacks
-	now := time.Now()
-	if err := tx.Model(&brand).UpdateColumn("deleted_at", now).Error; err != nil {
+	// now := time.Now()
+	// if err := tx.Model(&brand).UpdateColumn("deleted_at", now).Error; err != nil {
+	// 	tx.Rollback()
+	// 	return err
+	// }
+	if err := tx.Delete(&brand).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
+	
 
 	// Commit the transaction
 	return tx.Commit().Error

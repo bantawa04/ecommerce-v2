@@ -18,13 +18,13 @@ const (
 
 // Brand represents a brand in the system
 type Brand struct {
-	ID        string     `json:"id" gorm:"primaryKey;type:char(26)"`
-	Name      string     `json:"name" gorm:"type:varchar(255);not null"`
-	Slug      string     `json:"slug" gorm:"type:varchar(255);not null;uniqueIndex"`
-	Status    StatusEnum `json:"status" gorm:"type:enum('active','inactive');default:active"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt time.Time  `json:"deleted_at,omitempty" gorm:"index"`
+	ID        string         `json:"id" gorm:"primaryKey;type:char(26)"`
+	Name      string         `json:"name" gorm:"type:varchar(255);not null"`
+	Slug      string         `json:"slug" gorm:"type:varchar(255);not null;uniqueIndex"`
+	Status    StatusEnum     `json:"status" gorm:"type:enum('active','inactive');default:active"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
 }
 
 // BeforeCreate will set a ULID rather than numeric ID and generate a slug

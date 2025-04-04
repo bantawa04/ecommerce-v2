@@ -5,6 +5,7 @@ import (
 
 	"beautyessentials.com/internal/models"
 	"beautyessentials.com/internal/utils/transformer"
+	"gorm.io/gorm"
 )
 
 // BrandDTO represents the data transfer object for Brand
@@ -15,7 +16,7 @@ type BrandDTO struct {
 	Status    string     `json:"status"`
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-	DeletedAt *time.Time `json:"deletedAt,omitempty"`
+	DeletedAt gorm.DeletedAt `json:"deletedAt,omitempty"`
 }
 
 // FromModel converts a Brand model to a BrandDTO
@@ -27,7 +28,7 @@ func FromModel(brand models.Brand) BrandDTO {
 		Status:    string(brand.Status),
 		CreatedAt: &brand.CreatedAt,
 		UpdatedAt: &brand.UpdatedAt,
-		DeletedAt: &brand.DeletedAt,
+		DeletedAt: brand.DeletedAt,
 	}
 }
 
@@ -50,7 +51,7 @@ func (dto BrandDTO) ToModel() models.Brand {
 			}
 			return time.Now()
 		}(),
-		DeletedAt: *dto.DeletedAt,
+		DeletedAt: dto.DeletedAt,
 	}
 }
 
