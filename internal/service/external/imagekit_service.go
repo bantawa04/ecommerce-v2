@@ -221,27 +221,32 @@ func (s *ImageKitService) DeleteFile(fileID string) error {
 
 // DeleteBulkFiles deletes multiple files from ImageKit
 func (s *ImageKitService) DeleteBulkFiles(fileIDs []string) error {
-	// If more than 100 files, chunk them
+	// If more than 100 files, chunk them into batches of 100
 	if len(fileIDs) > 100 {
-		// Process in chunks of 100
+		chunks := make([][]string, 0)
 		for i := 0; i < len(fileIDs); i += 100 {
 			end := i + 100
 			if end > len(fileIDs) {
 				end = len(fileIDs)
 			}
-			chunk := fileIDs[i:end]
-			if err := s.deleteBulkFilesChunk(chunk); err != nil {
+			chunks = append(chunks, fileIDs[i:end])
+		}
+		
+		for _, chunk := range chunks {
+			// Process each chunk with a single API call
+			if err := s.bulkDeleteFilesRequest(chunk); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
-
-	return s.deleteBulkFilesChunk(fileIDs)
+	
+	// For 100 or fewer files, process them in a single request
+	return s.bulkDeleteFilesRequest(fileIDs)
 }
 
-// deleteBulkFilesChunk deletes a chunk of files (up to 100) from ImageKit
-func (s *ImageKitService) deleteBulkFilesChunk(fileIDs []string) error {
+// bulkDeleteFilesRequest makes the actual API request to delete files in bulk
+func (s *ImageKitService) bulkDeleteFilesRequest(fileIDs []string) error {
 	// Prepare request body
 	type requestBody struct {
 		FileIDs []string `json:"fileIds"`
