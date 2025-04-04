@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"beautyessentials.com/internal/constant"
 	"beautyessentials.com/internal/models"
 	"beautyessentials.com/internal/repository/interfaces"
 	"gorm.io/gorm"
@@ -120,9 +121,9 @@ func (r *BrandRepository) CreateBrand(ctx context.Context, data map[string]inter
 
 	// If status is provided, set it
 	if status, ok := data["status"].(string); ok {
-		brand.Status = models.StatusEnum(status)
+		brand.Status = constant.StatusEnum(status)
 	} else {
-		brand.Status = models.StatusActive // Default status
+		brand.Status = constant.StatusActive // Default status
 	}
 
 	// Start a transaction
@@ -210,17 +211,11 @@ func (r *BrandRepository) DeleteBrand(ctx context.Context, id string) error {
 		}
 	}()
 
-	// Use UpdateColumn instead of Update to bypass soft delete callbacks
-	// now := time.Now()
-	// if err := tx.Model(&brand).UpdateColumn("deleted_at", now).Error; err != nil {
-	// 	tx.Rollback()
-	// 	return err
-	// }
+	// Use Delete for soft delete since we're using gorm.DeletedAt
 	if err := tx.Delete(&brand).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	
 
 	// Commit the transaction
 	return tx.Commit().Error
@@ -229,7 +224,7 @@ func (r *BrandRepository) DeleteBrand(ctx context.Context, id string) error {
 // GetActiveBrands retrieves all active brands
 func (r *BrandRepository) GetActiveBrands(ctx context.Context) ([]models.Brand, error) {
 	var brands []models.Brand
-	result := r.db.WithContext(ctx).Where("status = ?", models.StatusActive).Find(&brands)
+	result := r.db.WithContext(ctx).Where("status = ?", constant.StatusActive).Find(&brands)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -242,7 +237,7 @@ func (r *BrandRepository) GetGroupedBrands(ctx context.Context) (map[string][]mo
 
 	// Select only needed fields
 	result := r.db.WithContext(ctx).
-		Where("status = ?", models.StatusActive).
+		Where("status = ?", constant.StatusActive).
 		Select("id, name, slug").
 		Find(&brands)
 

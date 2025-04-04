@@ -9,8 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// StatusEnum represents the status of a brand
+
 // Brand represents a brand in the system
-type Brand struct {
+type Category struct {
 	ID        string              `json:"id" gorm:"primaryKey;type:char(26)"`
 	Name      string              `json:"name" gorm:"type:varchar(255);not null"`
 	Slug      string              `json:"slug" gorm:"type:varchar(255);not null;uniqueIndex"`
@@ -21,7 +23,7 @@ type Brand struct {
 }
 
 // BeforeCreate will set a ULID rather than numeric ID and generate a slug
-func (b *Brand) BeforeCreate(tx *gorm.DB) error {
+func (b *Category) BeforeCreate(tx *gorm.DB) error {
 	if b.ID == "" {
 		// Generate a new ULID
 		id := ulid.Make()
@@ -37,6 +39,6 @@ func (b *Brand) BeforeCreate(tx *gorm.DB) error {
 }
 
 // TableName specifies the table name for the Brand model
-func (Brand) TableName() string {
-	return "brands"
+func (Category) TableName() string {
+	return "categories"
 }
