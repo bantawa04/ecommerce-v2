@@ -5,38 +5,27 @@ import (
 
 	"beautyessentials.com/internal/models"
 	"beautyessentials.com/internal/utils/transformer"
-	"gorm.io/gorm"
 )
 
 // MediaDTO represents the data transfer object for Media
 type MediaDTO struct {
-	ID          string         `json:"id"`
-	FileID      string         `json:"file_id"`
-	FileName    string         `json:"file_name"`
-	URL         string         `json:"url"`
-	ThumbURL    string         `json:"thumb_url"`
-	FileType    string         `json:"file_type"`
-	Size        int64          `json:"size"`
-	Description string         `json:"description"`
-	CreatedAt   *time.Time     `json:"created_at,omitempty"`
-	UpdatedAt   *time.Time     `json:"updated_at,omitempty"`
-	DeletedAt   gorm.DeletedAt `json:"deleted_at,omitempty"`
+	ID        string     `json:"id"`
+	FileID    string     `json:"file_id"`
+	URL       string     `json:"url"`
+	ThumbURL  string     `json:"thumb_url"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
 // FromMediaModel converts a Media model to a MediaDTO
 func FromMediaModel(media models.Media) MediaDTO {
 	return MediaDTO{
-		ID:          media.ID,
-		FileID:      media.FileID,
-		FileName:    media.FileName,
-		URL:         media.URL,
-		ThumbURL:    media.ThumbURL,
-		FileType:    media.FileType,
-		Size:        media.Size,
-		Description: media.Description,
-		CreatedAt:   &media.CreatedAt,
-		UpdatedAt:   &media.UpdatedAt,
-		DeletedAt:   media.DeletedAt,
+		ID:        media.ID,
+		FileID:    media.FileID,
+		URL:       media.URL,
+		ThumbURL:  media.ThumbURL,
+		CreatedAt: &media.CreatedAt,
+		UpdatedAt: &media.UpdatedAt,
 	}
 }
 
@@ -44,17 +33,12 @@ func FromMediaModel(media models.Media) MediaDTO {
 func (dto MediaDTO) ToMediaModel() models.Media {
 
 	return models.Media{
-		ID:          dto.ID,
-		FileID:      dto.FileID,
-		FileName:    dto.FileName,
-		URL:         dto.URL,
-		ThumbURL:    dto.ThumbURL,
-		FileType:    dto.FileType,
-		Size:        dto.Size,
-		Description: dto.Description,
-		CreatedAt:   *dto.CreatedAt,
-		UpdatedAt:   *dto.UpdatedAt,
-		DeletedAt:   dto.DeletedAt,
+		ID:        dto.ID,
+		FileID:    dto.FileID,
+		URL:       dto.URL,
+		ThumbURL:  dto.ThumbURL,
+		CreatedAt: *dto.CreatedAt,
+		UpdatedAt: *dto.UpdatedAt,
 	}
 }
 

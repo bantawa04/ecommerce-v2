@@ -11,6 +11,7 @@ import (
 	repoImpl "beautyessentials.com/internal/repository/implementations"
 	"beautyessentials.com/internal/router"
 	serviceImpl "beautyessentials.com/internal/service/implementations"
+	"beautyessentials.com/internal/service/external" // Add this import
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 	"gorm.io/gorm"
@@ -37,21 +38,25 @@ var ConfigModule = fx.Options(
 var RepositoryModule = fx.Options(
 	fx.Provide(repoImpl.NewHealthRepository),
 	fx.Provide(repoImpl.NewBrandRepository),
-	fx.Provide(repoImpl.NewCategoryRepository), // Add category repository
+	fx.Provide(repoImpl.NewCategoryRepository),
+	fx.Provide(repoImpl.NewMediaRepository), // Add media repository
 )
 
 // ServiceModule provides service dependencies
 var ServiceModule = fx.Options(
 	fx.Provide(serviceImpl.NewHealthService),
 	fx.Provide(serviceImpl.NewBrandService),
-	fx.Provide(serviceImpl.NewCategoryService), // Add category service
+	fx.Provide(serviceImpl.NewCategoryService),
+	fx.Provide(serviceImpl.NewMediaService), // Add media service
+	fx.Provide(external.NewImageKitService), // Add ImageKit service for media uploads
 )
 
 // HandlerModule provides handler dependencies
 var HandlerModule = fx.Options(
 	fx.Provide(handlers.NewHealthHandler),
 	fx.Provide(handlers.NewBrandHandler),
-	fx.Provide(handlers.NewCategoryHandler), // Add category handler
+	fx.Provide(handlers.NewCategoryHandler),
+	fx.Provide(handlers.NewMediaHandler), // Add media handler
 )
 
 // RouterModule provides router dependencies

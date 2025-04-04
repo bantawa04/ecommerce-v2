@@ -22,6 +22,7 @@ func NewRouter(
 	healthHandler *handlers.HealthHandler,
 	brandHandler *handlers.BrandHandler,
 	categoryHandler *handlers.CategoryHandler,
+	mediaHandler *handlers.MediaHandler,
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -82,6 +83,15 @@ func NewRouter(
 			categories.DELETE("/:id", categoryHandler.DeleteCategory)
 			categories.GET("/active", categoryHandler.GetActiveCategories)
 			categories.GET("/slug/:slug", categoryHandler.FindCategoryBySlug)
+		}
+		
+		// Media routes
+		media := api.Group("/media")
+		{
+			media.GET("", mediaHandler.GetAllMedia)         // index
+			media.POST("", mediaHandler.CreateMedia)        // store
+			media.DELETE("/:id", mediaHandler.DeleteMedia)  // destroy
+			// Remove other routes that don't match Laravel's apiResource except update
 		}
 	}
 

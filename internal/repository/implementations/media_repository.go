@@ -114,13 +114,9 @@ func (r *MediaRepository) FindMedia(ctx context.Context, id string) (models.Medi
 func (r *MediaRepository) CreateMedia(ctx context.Context, data map[string]interface{}) (models.Media, error) {
 	// Create a new media instance
 	media := models.Media{
-		FileID:      data["file_id"].(string),
-		FileName:    data["file_name"].(string),
-		URL:         data["url"].(string),
-		ThumbURL:    data["thumb_url"].(string),
-		FileType:    data["file_type"].(string),
-		Size:        data["size"].(int64),
-		Description: data["description"].(string),
+		FileID: data["file_id"].(string),
+		URL:      data["url"].(string),
+		ThumbURL: data["thumb_url"].(string),
 	}
 
 	// Start a transaction
@@ -151,41 +147,6 @@ func (r *MediaRepository) CreateMedia(ctx context.Context, data map[string]inter
 	return media, nil
 }
 
-// UpdateMedia updates an existing media
-func (r *MediaRepository) UpdateMedia(ctx context.Context, data map[string]interface{}, id string) (models.Media, error) {
-	// Find the media first
-	media, err := r.FindMedia(ctx, id)
-	if err != nil {
-		return models.Media{}, err
-	}
-
-	// Start a transaction
-	tx := r.db.WithContext(ctx).Begin()
-	if tx.Error != nil {
-		return models.Media{}, tx.Error
-	}
-
-	// Defer a rollback in case anything fails
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	// Update the media within the transaction
-	if err := tx.Model(&media).Updates(data).Error; err != nil {
-		tx.Rollback()
-		return models.Media{}, err
-	}
-
-	// Commit the transaction
-	if err := tx.Commit().Error; err != nil {
-		return models.Media{}, err
-	}
-
-	// Refresh the media data
-	return r.FindMedia(ctx, id)
-}
 
 // DeleteMedia soft deletes a media
 func (r *MediaRepository) DeleteMedia(ctx context.Context, id string) error {
