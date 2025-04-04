@@ -3,6 +3,7 @@ package implementations
 import (
 	"context"
 
+	"beautyessentials.com/internal/dto"
 	"beautyessentials.com/internal/models"
 	"beautyessentials.com/internal/repository/interfaces"
 	serviceInterfaces "beautyessentials.com/internal/service/interfaces"
@@ -22,35 +23,78 @@ func NewBrandService(brandRepo interfaces.BrandRepository) serviceInterfaces.Bra
 
 // GetAllBrands retrieves all brands with filtering and pagination
 func (s *BrandService) GetAllBrands(ctx context.Context, filters map[string]interface{}, appends map[string]interface{}) (interface{}, error) {
-	return s.brandRepo.GetAllBrands(ctx, filters, appends)
+	result, err := s.brandRepo.GetAllBrands(ctx, filters, appends)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if the result is paginated
+	if paginatedResult, ok := result.(map[string]interface{}); ok {
+		return dto.TransformBrandPagination(paginatedResult), nil
+	}
+
+	// If not paginated, it should be a slice of Brand models
+	if brands, ok := result.([]models.Brand); ok {
+		return dto.TransformBrandCollection(brands), nil
+	}
+
+	// Return as is if we can't transform
+	return result, nil
+}
+
+// GetActiveBrands retrieves all active brands
+func (s *BrandService) GetActiveBrands(ctx context.Context) ([]dto.BrandDTO, error) {
+	brands, err := s.brandRepo.GetActiveBrands(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return dto.TransformBrandCollection(brands), nil
+}
+
+// GetGroupedBrands retrieves brands grouped by first letter
+func (s *BrandService) GetGroupedBrands(ctx context.Context) (map[string][]dto.BrandDTO, error) {
+	groupedBrands, err := s.brandRepo.GetGroupedBrands(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Transform each group
+	result := make(map[string][]dto.BrandDTO)
+	for letter, brands := range groupedBrands {
+		result[letter] = dto.TransformBrandCollection(brands)
+	}
+
+	return result, nil
 }
 
 // FindBrand finds a brand by ID
-func (s *BrandService) FindBrand(ctx context.Context, id string) (models.Brand, error) {
-	return s.brandRepo.FindBrand(ctx, id)
+func (s *BrandService) FindBrand(ctx context.Context, id string) (dto.BrandDTO, error) {
+	brand, err := s.brandRepo.FindBrand(ctx, id)
+	if err != nil {
+		return dto.BrandDTO{}, err
+	}
+	return dto.FromModel(brand), nil
 }
 
 // CreateBrand creates a new brand
-func (s *BrandService) CreateBrand(ctx context.Context, data map[string]interface{}) (models.Brand, error) {
-	return s.brandRepo.CreateBrand(ctx, data)
+func (s *BrandService) CreateBrand(ctx context.Context, data map[string]interface{}) (dto.BrandDTO, error) {
+	brand, err := s.brandRepo.CreateBrand(ctx, data)
+	if err != nil {
+		return dto.BrandDTO{}, err
+	}
+	return dto.FromModel(brand), nil
 }
 
 // UpdateBrand updates an existing brand
-func (s *BrandService) UpdateBrand(ctx context.Context, data map[string]interface{}, id string) (models.Brand, error) {
-	return s.brandRepo.UpdateBrand(ctx, data, id)
+func (s *BrandService) UpdateBrand(ctx context.Context, data map[string]interface{}, id string) (dto.BrandDTO, error) {
+	brand, err := s.brandRepo.UpdateBrand(ctx, data, id)
+	if err != nil {
+		return dto.BrandDTO{}, err
+	}
+	return dto.FromModel(brand), nil
 }
 
 // DeleteBrand deletes a brand
 func (s *BrandService) DeleteBrand(ctx context.Context, id string) error {
 	return s.brandRepo.DeleteBrand(ctx, id)
-}
-
-// GetActiveBrands retrieves all active brands
-func (s *BrandService) GetActiveBrands(ctx context.Context) ([]models.Brand, error) {
-	return s.brandRepo.GetActiveBrands(ctx)
-}
-
-// GetGroupedBrands retrieves brands grouped by first letter
-func (s *BrandService) GetGroupedBrands(ctx context.Context) (map[string][]models.Brand, error) {
-	return s.brandRepo.GetGroupedBrands(ctx)
 }
