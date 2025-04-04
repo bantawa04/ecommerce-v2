@@ -2,7 +2,6 @@ package router
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"beautyessentials.com/internal/api/handlers"
@@ -17,11 +16,12 @@ type Router interface {
 }
 
 // NewRouter creates and configures a Gin router
-// Update the NewRouter function to include brand routes
+// Update the NewRouter function to include brand and category routes
 func NewRouter(
 	respHelper *responses.ResponseHelper,
 	healthHandler *handlers.HealthHandler,
 	brandHandler *handlers.BrandHandler,
+	categoryHandler *handlers.CategoryHandler,
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -50,24 +50,38 @@ func NewRouter(
 
 	// Handle 404 Not Found
 	router.NoRoute(func(c *gin.Context) {
-		respHelper.SendError(c, "Route not found", "The requested endpoint does not exist", http.StatusNotFound)
+		// Add error to context instead of handling directly
+		appErr := middlewares.NewNotFoundError("Route not found", "The requested endpoint does not exist")
+		_ = c.Error(appErr)
 	})
 
 	// Register routes
 	router.GET("/ping", healthHandler.HealthCheck)
 
-	// Brand routes
+	// API routes
 	api := router.Group("/api")
 	{
+		// Brand routes
 		brands := api.Group("/brands")
 		{
 			brands.GET("", brandHandler.GetAllBrands)
 			brands.GET("/:id", brandHandler.GetBrand)
 			brands.POST("", brandHandler.CreateBrand)
 			brands.PUT("/:id", brandHandler.UpdateBrand)
-			brands.DELETE("/:id", brandHandler.DeleteBrand)
-			brands.GET("/active", brandHandler.GetActiveBrands)
+			brands.DELETE("/:id", brandHandler.DeleteBrand)			
 			brands.GET("/grouped", brandHandler.GetGroupedBrands)
+		}
+
+		// Category routes
+		categories := api.Group("/categories")
+		{
+			categories.GET("", categoryHandler.GetAllCategories)
+			categories.GET("/:id", categoryHandler.GetCategory)
+			categories.POST("", categoryHandler.CreateCategory)
+			categories.PUT("/:id", categoryHandler.UpdateCategory)
+			categories.DELETE("/:id", categoryHandler.DeleteCategory)
+			categories.GET("/active", categoryHandler.GetActiveCategories)
+			categories.GET("/slug/:slug", categoryHandler.FindCategoryBySlug)
 		}
 	}
 

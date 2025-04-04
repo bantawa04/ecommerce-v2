@@ -40,18 +40,8 @@ func (dto BrandDTO) ToModel() models.Brand {
 		Name:   dto.Name,
 		Slug:   dto.Slug,
 		Status: constant.StatusEnum(dto.Status),
-		CreatedAt: func() time.Time {
-			if dto.CreatedAt != nil {
-				return *dto.CreatedAt
-			}
-			return time.Now()
-		}(),
-		UpdatedAt: func() time.Time {
-			if dto.UpdatedAt != nil {
-				return *dto.UpdatedAt
-			}
-			return time.Now()
-		}(),
+		CreatedAt: *dto.CreatedAt,
+		UpdatedAt: *dto.UpdatedAt,
 		DeletedAt: dto.DeletedAt,
 	}
 }

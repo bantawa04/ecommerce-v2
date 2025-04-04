@@ -9,8 +9,53 @@ import (
 
 // Config holds all configuration for the application
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
+	// Server config
+	ServerPort         string        `mapstructure:"SERVER_PORT"`
+	ServerReadTimeout  time.Duration `mapstructure:"SERVER_READ_TIMEOUT"`
+	ServerWriteTimeout time.Duration `mapstructure:"SERVER_WRITE_TIMEOUT"`
+	
+	// Database config
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBPort     string `mapstructure:"DB_PORT"`
+	DBUser     string `mapstructure:"DB_USER"`
+	DBPassword string `mapstructure:"DB_PASSWORD"`
+	DBName     string `mapstructure:"DB_NAME"`
+	DBSSLMode  string `mapstructure:"DB_SSL_MODE"`
+	
+	// ImageKit config
+	ImageKitPublicKey   string `mapstructure:"IMAGEKIT_PUBLIC_KEY"`
+	ImageKitPrivateKey  string `mapstructure:"IMAGEKIT_PRIVATE_KEY"`
+	ImageKitURLEndpoint string `mapstructure:"IMAGEKIT_URL_ENDPOINT"`
+}
+
+// ServerConfig returns the server configuration
+func (c *Config) Server() ServerConfig {
+	return ServerConfig{
+		Port:         c.ServerPort,
+		ReadTimeout:  c.ServerReadTimeout,
+		WriteTimeout: c.ServerWriteTimeout,
+	}
+}
+
+// Database returns the database configuration
+func (c *Config) Database() DatabaseConfig {
+	return DatabaseConfig{
+		Host:     c.DBHost,
+		Port:     c.DBPort,
+		User:     c.DBUser,
+		Password: c.DBPassword,
+		DBName:   c.DBName,
+		SSLMode:  c.DBSSLMode,
+	}
+}
+
+// ImageKit returns the ImageKit configuration
+func (c *Config) ImageKit() ImageKitConfig {
+	return ImageKitConfig{
+		PublicKey:   c.ImageKitPublicKey,
+		PrivateKey:  c.ImageKitPrivateKey,
+		URLEndpoint: c.ImageKitURLEndpoint,
+	}
 }
 
 // ServerConfig holds server-related configuration
@@ -28,6 +73,13 @@ type DatabaseConfig struct {
 	Password string
 	DBName   string
 	SSLMode  string
+}
+
+// ImageKitConfig holds ImageKit-related configuration
+type ImageKitConfig struct {
+	PublicKey   string
+	PrivateKey  string
+	URLEndpoint string
 }
 
 // LoadConfig loads configuration from environment variables and .env files
@@ -48,32 +100,24 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("DB_PASSWORD", "")
 	viper.SetDefault("DB_NAME", "beautyessentials")
 	viper.SetDefault("DB_SSL_MODE", "allow")
+	viper.SetDefault("IMAGEKIT_PUBLIC_KEY", "")
+	viper.SetDefault("IMAGEKIT_PRIVATE_KEY", "")
+	viper.SetDefault("IMAGEKIT_URL_ENDPOINT", "")
 
 	// Enable environment variables
 	viper.AutomaticEnv()
 
-	// Try to read .env file (optional)
+	// Try to read .env file
 	if err := viper.ReadInConfig(); err != nil {
 		log.Printf("Warning: .env file not found: %v", err)
 		// Continue with environment variables and defaults
 	}
 
-	// Parse the configuration
-	var config Config
-	config.Server = ServerConfig{
-		Port:         viper.GetString("SERVER_PORT"),
-		ReadTimeout:  viper.GetDuration("SERVER_READ_TIMEOUT"),
-		WriteTimeout: viper.GetDuration("SERVER_WRITE_TIMEOUT"),
+	// Create config instance and unmarshal into it
+	config := &Config{}
+	if err := viper.Unmarshal(config); err != nil {
+		return nil, err
 	}
 
-	config.Database = DatabaseConfig{
-		Host:     viper.GetString("DB_HOST"),
-		Port:     viper.GetString("DB_PORT"),
-		User:     viper.GetString("DB_USER"),
-		Password: viper.GetString("DB_PASSWORD"),
-		DBName:   viper.GetString("DB_NAME"),
-		SSLMode:  viper.GetString("DB_SSL_MODE"),
-	}
-
-	return &config, nil
+	return config, nil
 }

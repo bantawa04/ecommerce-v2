@@ -27,30 +27,31 @@ var Module = fx.Options(
 )
 
 // ConfigModule provides configuration dependencies
-// Add this to your ConfigModule
-var ConfigModule = fx.Options(
+var ConfigModule = fx.Options( 
 	fx.Provide(config.LoadConfig),
 	fx.Provide(config.InitDatabase),
 	fx.Provide(responses.NewResponseHelper),
 )
 
 // RepositoryModule provides repository dependencies
-// Update the RepositoryModule
 var RepositoryModule = fx.Options(
 	fx.Provide(repoImpl.NewHealthRepository),
 	fx.Provide(repoImpl.NewBrandRepository),
+	fx.Provide(repoImpl.NewCategoryRepository), // Add category repository
 )
 
-// Update the ServiceModule
+// ServiceModule provides service dependencies
 var ServiceModule = fx.Options(
 	fx.Provide(serviceImpl.NewHealthService),
 	fx.Provide(serviceImpl.NewBrandService),
+	fx.Provide(serviceImpl.NewCategoryService), // Add category service
 )
 
-// Update the HandlerModule
+// HandlerModule provides handler dependencies
 var HandlerModule = fx.Options(
 	fx.Provide(handlers.NewHealthHandler),
 	fx.Provide(handlers.NewBrandHandler),
+	fx.Provide(handlers.NewCategoryHandler), // Add category handler
 )
 
 // RouterModule provides router dependencies
@@ -66,11 +67,12 @@ func BuildApp() *fx.App {
 
 // newHTTPServer creates an HTTP server with the provided router and configuration
 func newHTTPServer(router *gin.Engine, cfg *config.Config) *http.Server {
+	serverConfig := cfg.Server()
 	return &http.Server{
-		Addr:         ":" + cfg.Server.Port,
+		Addr:         ":" + serverConfig.Port,
 		Handler:      router,
-		ReadTimeout:  cfg.Server.ReadTimeout,
-		WriteTimeout: cfg.Server.WriteTimeout,
+		ReadTimeout:  serverConfig.ReadTimeout,
+		WriteTimeout: serverConfig.WriteTimeout,
 	}
 }
 
@@ -92,7 +94,8 @@ func bootstrap(
 
 			// Start the server in a goroutine
 			go func() {
-				log.Printf("Server starting on port %s", cfg.Server.Port)
+				serverConfig := cfg.Server()
+				log.Printf("Server starting on port %s", serverConfig.Port)
 				if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 					log.Fatalf("Failed to start server: %v", err)
 				}

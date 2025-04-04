@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"beautyessentials.com/internal/api/middlewares"
 	"beautyessentials.com/internal/api/responses"
 	"beautyessentials.com/internal/requests"
 	"beautyessentials.com/internal/service/interfaces"
@@ -110,21 +111,27 @@ func (h *BrandHandler) CreateBrand(c *gin.Context) {
 	// Parse and validate request
 	var request requests.BrandCreateRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		h.respHelper.SendError(c, "Invalid request format", err.Error(), http.StatusBadRequest)
+		// Add error to context instead of handling directly
+		appErr := middlewares.NewValidationError("Invalid request format", err.Error())
+		_ = c.Error(appErr)
 		return
 	}
 
 	// Validate the request
 	if err := h.validator.Struct(request); err != nil {
 		validationErrors := h.validator.GenerateValidationErrors(err)
-		h.respHelper.ValidationError(c, validationErrors, "Validation failed")
+		// Add error to context instead of handling directly
+		appErr := middlewares.NewValidationError("Validation failed", "Request validation failed", validationErrors)
+		_ = c.Error(appErr)
 		return
 	}
 
 	// Create brand directly using the request data
 	brand, err := h.brandService.CreateBrand(c, request)
 	if err != nil {
-		h.respHelper.SendError(c, "Failed to create brand", err.Error(), http.StatusInternalServerError)
+		// Add error to context instead of handling directly
+		appErr := middlewares.NewInternalError("Failed to create brand", err.Error())
+		_ = c.Error(appErr)
 		return
 	}
 
@@ -178,16 +185,6 @@ func (h *BrandHandler) DeleteBrand(c *gin.Context) {
 	h.respHelper.SendSuccess(c, "Brand deleted successfully", http.StatusOK)
 }
 
-// GetActiveBrands handles the request to get all active brands
-func (h *BrandHandler) GetActiveBrands(c *gin.Context) {
-	brands, err := h.brandService.GetActiveBrands(c)
-	if err != nil {
-		h.respHelper.SendError(c, "Failed to retrieve active brands", err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	h.respHelper.OkResponse(c, brands, "Active brands retrieved successfully")
-}
 
 // GetGroupedBrands handles the request to get brands grouped by first letter
 func (h *BrandHandler) GetGroupedBrands(c *gin.Context) {

@@ -13,10 +13,11 @@ import (
 
 // InitDatabase establishes a connection to the database using the application config
 func InitDatabase(cfg *Config) (*gorm.DB, error) {
+	dbConfig := cfg.Database()
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Database.Host, cfg.Database.Port, cfg.Database.User,
-		cfg.Database.Password, cfg.Database.DBName, cfg.Database.SSLMode,
+		dbConfig.Host, dbConfig.Port, dbConfig.User,
+		dbConfig.Password, dbConfig.DBName, dbConfig.SSLMode,
 	)
 
 	// Configure GORM logger
