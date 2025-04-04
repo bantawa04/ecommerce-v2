@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"beautyessentials.com/internal/utils"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
 )
@@ -26,13 +27,19 @@ type Brand struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty" gorm:"index"`
 }
 
-// BeforeCreate will set a ULID rather than numeric ID
+// BeforeCreate will set a ULID rather than numeric ID and generate a slug
 func (b *Brand) BeforeCreate(tx *gorm.DB) error {
 	if b.ID == "" {
 		// Generate a new ULID
 		id := ulid.Make()
 		b.ID = id.String()
 	}
+
+	// Generate slug from name if not provided
+	if b.Slug == "" && b.Name != "" {
+		b.Slug = utils.GenerateSlug(b.Name)
+	}
+
 	return nil
 }
 

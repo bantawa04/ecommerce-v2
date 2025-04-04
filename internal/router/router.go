@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"beautyessentials.com/internal/api/handlers"
@@ -45,6 +46,11 @@ func NewRouter(
 			latency,
 			c.Request.URL.Path,
 		)
+	})
+
+	// Handle 404 Not Found
+	router.NoRoute(func(c *gin.Context) {
+		respHelper.SendError(c, "Route not found", "The requested endpoint does not exist", http.StatusNotFound)
 	})
 
 	// Register routes

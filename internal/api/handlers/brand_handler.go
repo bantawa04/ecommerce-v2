@@ -6,6 +6,7 @@ import (
 
 	"beautyessentials.com/internal/api/responses"
 	"beautyessentials.com/internal/service/interfaces"
+	"beautyessentials.com/internal/validators"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +14,7 @@ import (
 type BrandHandler struct {
 	brandService interfaces.BrandService
 	respHelper   *responses.ResponseHelper
+	validator    *validators.Validator
 }
 
 // NewBrandHandler creates a new instance of BrandHandler
@@ -23,6 +25,7 @@ func NewBrandHandler(
 	return &BrandHandler{
 		brandService: brandService,
 		respHelper:   respHelper,
+		validator:    validators.NewValidator(),
 	}
 }
 
@@ -103,28 +106,53 @@ func (h *BrandHandler) GetBrand(c *gin.Context) {
 
 // CreateBrand handles the request to create a new brand
 func (h *BrandHandler) CreateBrand(c *gin.Context) {
-	var data map[string]interface{}
-	if err := c.ShouldBindJSON(&data); err != nil {
-		h.respHelper.SendError(c, "Invalid request data", err.Error(), http.StatusBadRequest)
+	// Parse and validate request
+	var request validators.BrandCreateRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		h.respHelper.SendError(c, "Invalid request format", err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	brand, err := h.brandService.CreateBrand(c, data)
+	// Validate the request
+	if err := h.validator.Struct(request); err != nil {
+		validationErrors := h.validator.GenerateValidationErrors(err)
+		h.respHelper.ValidationError(c, validationErrors, "Validation failed")
+		return
+	}
+
+	// Create brand directly using the request data
+	brand, err := h.brandService.CreateBrand(c, request)
 	if err != nil {
 		h.respHelper.SendError(c, "Failed to create brand", err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Return the created brand
 	h.respHelper.CreatedResponse(c, brand, "Brand created successfully")
 }
 
 // UpdateBrand handles the request to update a brand
 func (h *BrandHandler) UpdateBrand(c *gin.Context) {
 	id := c.Param("id")
-	var data map[string]interface{}
-	if err := c.ShouldBindJSON(&data); err != nil {
-		h.respHelper.SendError(c, "Invalid request data", err.Error(), http.StatusBadRequest)
+
+	// Parse and validate request
+	var request validators.BrandUpdateRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		h.respHelper.SendError(c, "Invalid request format", err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	// Validate the request
+	if err := h.validator.Struct(request); err != nil {
+		validationErrors := h.validator.GenerateValidationErrors(err)
+		h.respHelper.ValidationError(c, validationErrors, "Validation failed")
+		return
+	}
+
+	// Convert validated request to map for service
+	data := make(map[string]interface{})
+	if request.Name != "" {
+		data["name"] = request.Name
 	}
 
 	brand, err := h.brandService.UpdateBrand(c, data, id)

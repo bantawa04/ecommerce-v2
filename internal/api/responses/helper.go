@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"beautyessentials.com/internal/validators"
 )
 
 // ResponseHelper provides methods for standardized API responses
@@ -70,7 +71,13 @@ func (h *ResponseHelper) CreatedResponse(c *gin.Context, data interface{}, messa
 	SendResponse(c, data, message, HTTPCreated)
 }
 
-// ValidationError is a shorthand for sending a 422 Unprocessable Entity response
-func (h *ResponseHelper) ValidationError(c *gin.Context, message string, description string, data ...interface{}) {
-	SendError(c, message, description, HTTPUnprocessableEntity, data...)
+
+// ValidationError sends a validation error response
+func (r *ResponseHelper) ValidationError(c *gin.Context, errors []validators.ValidationError, message string) {
+	response := gin.H{
+		"success": false,
+		"message": message,
+		"errors":  errors,
+	}
+	c.JSON(http.StatusUnprocessableEntity, response)
 }

@@ -113,30 +113,76 @@ func (r *BrandRepository) FindBrand(ctx context.Context, id string) (models.Bran
 
 // CreateBrand creates a new brand
 func (r *BrandRepository) CreateBrand(ctx context.Context, data map[string]interface{}) (models.Brand, error) {
+	// Create a new brand instance
 	brand := models.Brand{
-		Name:   data["name"].(string),
-		Slug:   data["slug"].(string),
-		Status: models.StatusEnum(data["status"].(string)),
+		Name: data["name"].(string),
 	}
 	
-	result := r.db.WithContext(ctx).Create(&brand)
-	if result.Error != nil {
-		return models.Brand{}, result.Error
+	// If status is provided, set it
+	if status, ok := data["status"].(string); ok {
+		brand.Status = models.StatusEnum(status)
+	} else {
+		brand.Status = models.StatusActive // Default status
 	}
 	
+	// Start a transaction
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return models.Brand{}, tx.Error
+	}
+	
+	// Defer a rollback in case anything fails
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	
+	// Create the brand within the transaction
+	if err := tx.Create(&brand).Error; err != nil {
+		tx.Rollback()
+		return models.Brand{}, err
+	}
+	
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return models.Brand{}, err
+	}
+	
+	// Return the created brand
 	return brand, nil
 }
 
 // UpdateBrand updates an existing brand
 func (r *BrandRepository) UpdateBrand(ctx context.Context, data map[string]interface{}, id string) (models.Brand, error) {
+	// Find the brand first
 	brand, err := r.FindBrand(ctx, id)
 	if err != nil {
 		return models.Brand{}, err
 	}
 	
-	result := r.db.WithContext(ctx).Model(&brand).Updates(data)
-	if result.Error != nil {
-		return models.Brand{}, result.Error
+	// Start a transaction
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return models.Brand{}, tx.Error
+	}
+	
+	// Defer a rollback in case anything fails
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	
+	// Update the brand within the transaction
+	if err := tx.Model(&brand).Updates(data).Error; err != nil {
+		tx.Rollback()
+		return models.Brand{}, err
+	}
+	
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return models.Brand{}, err
 	}
 	
 	// Refresh the brand data
@@ -145,13 +191,33 @@ func (r *BrandRepository) UpdateBrand(ctx context.Context, data map[string]inter
 
 // DeleteBrand soft deletes a brand
 func (r *BrandRepository) DeleteBrand(ctx context.Context, id string) error {
+	// Find the brand first
 	brand, err := r.FindBrand(ctx, id)
 	if err != nil {
 		return err
 	}
 	
-	result := r.db.WithContext(ctx).Delete(&brand)
-	return result.Error
+	// Start a transaction
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	
+	// Defer a rollback in case anything fails
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	
+	// Delete the brand within the transaction
+	if err := tx.Delete(&brand).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	
+	// Commit the transaction
+	return tx.Commit().Error
 }
 
 // GetActiveBrands retrieves all active brands

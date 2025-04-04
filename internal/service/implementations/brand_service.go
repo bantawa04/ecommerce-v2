@@ -7,6 +7,7 @@ import (
 	"beautyessentials.com/internal/models"
 	"beautyessentials.com/internal/repository/interfaces"
 	serviceInterfaces "beautyessentials.com/internal/service/interfaces"
+	"beautyessentials.com/internal/validators"
 )
 
 // BrandService implements the BrandService interface
@@ -77,12 +78,20 @@ func (s *BrandService) FindBrand(ctx context.Context, id string) (dto.BrandDTO, 
 }
 
 // CreateBrand creates a new brand
-func (s *BrandService) CreateBrand(ctx context.Context, data map[string]interface{}) (dto.BrandDTO, error) {
-	brand, err := s.brandRepo.CreateBrand(ctx, data)
+func (s *BrandService) CreateBrand(ctx context.Context, request validators.BrandCreateRequest) (dto.BrandDTO, error) {
+	// Convert request to map for repository
+	data := map[string]interface{}{
+		"name": request.Name,
+	}
+	
+	// Use transaction in repository
+	createdBrand, err := s.brandRepo.CreateBrand(ctx, data)
 	if err != nil {
 		return dto.BrandDTO{}, err
 	}
-	return dto.FromModel(brand), nil
+	
+	// Convert to DTO and return
+	return dto.FromModel(createdBrand), nil
 }
 
 // UpdateBrand updates an existing brand
